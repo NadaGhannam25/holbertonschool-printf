@@ -11,7 +11,7 @@ static int _print_number(long n)
         if (_putchar('-') < 0)
             return -1;
         count++;
-        if (n == -2147483648L || n == -9223372036854775807L - 1) // أصغر رقم long
+        if (n == -2147483648L || n == -9223372036854775807L - 1)
         {
             char *min_val = (n == -2147483648L) ? "2147483648" : "9223372036854775808";
             for (int i = 0; min_val[i]; i++)
@@ -57,7 +57,7 @@ int _printf(const char *format, ...)
             count += _putchar('%');
         else if (format[i] == 'd' || format[i] == 'i')
         {
-            long num = va_arg(ap, long);
+            long num = va_arg(ap, long);  // هنا نستخدم long بدل int
             res = _print_number(num);
             if (res < 0)
             {
