@@ -57,7 +57,7 @@ int _printf(const char *format, ...)
             count += _putchar('%');
         else if (format[i] == 'd' || format[i] == 'i')
         {
-            long num = va_arg(ap, long);  // هنا نستخدم long بدل int
+            long num = va_arg(ap, long);
             res = _print_number(num);
             if (res < 0)
             {
