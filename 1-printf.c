@@ -1,28 +1,41 @@
 #include <stdarg.h>
 #include "main.h"
 
-static int _print_number(int n)
+static int _print_number(long n)
 {
     int count = 0;
     char digit;
 
     if (n < 0)
     {
-        _putchar('-');
+        if (_putchar('-') < 0)
+            return -1;
         count++;
-        if (n == -2147483648)
+        if (n == -2147483648L || n == -9223372036854775807L - 1) // أصغر رقم long
         {
-            _putstr("2147483648");
-            return count + 10;
+            char *min_val = (n == -2147483648L) ? "2147483648" : "9223372036854775808";
+            for (int i = 0; min_val[i]; i++)
+            {
+                if (_putchar(min_val[i]) < 0)
+                    return -1;
+                count++;
+            }
+            return count;
         }
         n = -n;
     }
 
     if (n / 10)
-        count += _print_number(n / 10);
+    {
+        int res = _print_number(n / 10);
+        if (res < 0)
+            return -1;
+        count += res;
+    }
 
     digit = (n % 10) + '0';
-    _putchar(digit);
+    if (_putchar(digit) < 0)
+        return -1;
     count++;
 
     return count;
@@ -44,7 +57,7 @@ int _printf(const char *format, ...)
             count += _putchar('%');
         else if (format[i] == 'd' || format[i] == 'i')
         {
-            int num = va_arg(ap, int);
+            long num = va_arg(ap, long);
             res = _print_number(num);
             if (res < 0)
             {
@@ -54,7 +67,14 @@ int _printf(const char *format, ...)
             count += res;
         }
         else
-            count += _putchar(format[i]);
+        {
+            if (_putchar(format[i]) < 0)
+            {
+                va_end(ap);
+                return -1;
+            }
+            count++;
+        }
         i++;
     }
     va_end(ap);
