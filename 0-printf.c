@@ -11,7 +11,9 @@
 static int _putchar(char c)
 {
     if (write(1, &c, 1) != 1)
+    {
         return (-1);
+    }
     return (1);
 }
 
@@ -19,24 +21,31 @@ static int _putchar(char c)
  * _putstr - write a string to stdout
  * @s: the string to print, prints "(null)" if NULL
  *
- * Return: number of characters printed,
- * -1 on error
+ * Return: number of characters printed, -1 on error
  */
 static int _putstr(char *s)
 {
     unsigned int len = 0;
 
     if (s == NULL)
+    {
         s = "(null)";
+    }
 
     while (s[len])
+    {
         len++;
+    }
 
     if (len == 0)
+    {
         return (0);
+    }
 
     if (write(1, s, len) != (ssize_t)len)
+    {
         return (-1);
+    }
 
     return ((int)len);
 }
@@ -59,7 +68,9 @@ int _printf(const char *format, ...)
     int res;
 
     if (format == NULL)
+    {
         return (-1);
+    }
 
     va_start(ap, format);
 
