@@ -1,0 +1,46 @@
+.TH _PRINTF 3 "01-10-2025" "1.0" "Holberton School"
+.SH NAME
+_printf \- formatted output to stdout (supports %c, %s, %%, %d, %i)
+.SH SYNOPSIS
+.B #include "main.h"
+.br
+.B int _printf(const char *format, ...);
+.SH DESCRIPTION
+The
+.B _printf
+function produces output according to a format string.
+
+Supported conversion specifiers:
+.TP
+.B %c
+Print a single character.
+.TP
+.B %s
+Print a string. If the argument is NULL, prints "(null)".
+.TP
+.B %%
+Print a literal percent sign.
+.TP
+.B %d, %i
+Print a signed decimal integer.
+
+The function uses only the
+.B write(2)
+system call to output characters. No other C library buffering functions are used.
+
+.LP
+If
+.B format
+is NULL, the function returns -1.
+If a lone '%' appears at the end of the string or an unknown specifier is used, it prints '%' followed by the unknown character.
+.SH RETURN VALUE
+The function returns the number of characters printed (excluding the final null byte) or -1 on error.
+.SH EXAMPLES
+.EX
+_printf("Hello %s %c %%\n", "World", '!'); 
+# Output: Hello World ! %
+_printf("Number: %d, Another: %i\n", 123, -456); 
+# Output: Number: 123, Another: -456
+.EE
+.SH NOTES
+This function is a simplified re-implementation of the standard printf, intended for educational purposes and Holberton School projects.
