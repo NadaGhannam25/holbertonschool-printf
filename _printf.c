@@ -1,37 +1,34 @@
 #include "main.h"
 
 /**
- * handle_specifier - handle format specifier
- * @spec: specifier char
- * @ap: va_list args
+ * handle_specifier - choose the right function for a format specifier
+ * @spec: the specifier character
+ * @ap: list of arguments
  * @buf: buffer
  * @idx: buffer index
  *
- * Return: number of chars added
+ * Return: number of chars printed
  */
 int handle_specifier(char spec, va_list ap, char *buf, int *idx)
 {
-	int added = 0;
-	char ch;
-	const char *s;
+	int count = 0;
+	char *s;
 
 	switch (spec)
 	{
 	case 'c':
-		ch = (char)va_arg(ap, int);
-		buf_putc(buf, idx, ch);
-		return (1);
+		return (buf_putc(buf, idx, (char)va_arg(ap, int)));
 	case 's':
 		s = va_arg(ap, char *);
 		if (!s)
 			s = "(null)";
 		while (*s)
-			buf_putc(buf, idx, *s++), added++;
-		return (added);
+			buf_putc(buf, idx, *s++), count++;
+		return (count);
 	case '%':
-		buf_putc(buf, idx, '%');
-		return (1);
-	case 'd': case 'i':
+		return (buf_putc(buf, idx, '%'));
+	case 'd':
+	case 'i':
 		return (print_number(buf, idx, (long)va_arg(ap, int)));
 	case 'b':
 		return (print_unsigned_num_base(buf, idx,
@@ -52,11 +49,7 @@ int handle_specifier(char spec, va_list ap, char *buf, int *idx)
 	{
 		void *ptr = va_arg(ap, void *);
 		if (!ptr)
-		{
-			const char *nil = "(nil)";
-			buf_append(buf, idx, nil, 5);
-			return (5);
-		}
+			return (buf_append(buf, idx, "(nil)", 5));
 		return (print_pointer(buf, idx, ptr));
 	}
 	default:
