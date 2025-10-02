@@ -36,4 +36,6 @@ It works by interpreting a **format string**, composed of zero or more **directi
 
 ---
 
-<img src="3.PNG" alt="Banner" width="100%"/>
+<p align="center">
+  <img src="3.png" width="400" height="400" />
+</p>
