@@ -8,6 +8,7 @@
 #define BUFSIZE 1024
 
 int _printf(const char *format, ...);
+int handle_specifier(char spec, va_list ap, char *buf, int *idx);
 
 /* buffer helpers */
 int flush_buffer(char *buf, int *idx);

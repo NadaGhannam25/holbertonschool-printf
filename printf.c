@@ -1,5 +1,70 @@
 #include "main.h"
-#include <stdlib.h>
+
+/**
+ * handle_specifier - handle format specifier
+ * @spec: specifier char
+ * @ap: va_list args
+ * @buf: buffer
+ * @idx: buffer index
+ *
+ * Return: number of chars added
+ */
+int handle_specifier(char spec, va_list ap, char *buf, int *idx)
+{
+	int added = 0;
+	char ch;
+	const char *s;
+
+	switch (spec)
+	{
+	case 'c':
+		ch = (char)va_arg(ap, int);
+		buf_putc(buf, idx, ch);
+		return (1);
+	case 's':
+		s = va_arg(ap, char *);
+		if (!s)
+			s = "(null)";
+		while (*s)
+			buf_putc(buf, idx, *s++), added++;
+		return (added);
+	case '%':
+		buf_putc(buf, idx, '%');
+		return (1);
+	case 'd': case 'i':
+		return (print_number(buf, idx, (long)va_arg(ap, int)));
+	case 'b':
+		return (print_unsigned_num_base(buf, idx,
+			va_arg(ap, unsigned int), 2, 0));
+	case 'u':
+		return (print_unsigned_num_base(buf, idx,
+			va_arg(ap, unsigned int), 10, 0));
+	case 'o':
+		return (print_unsigned_num_base(buf, idx,
+			va_arg(ap, unsigned int), 8, 0));
+	case 'x':
+		return (print_unsigned_num_base(buf, idx,
+			va_arg(ap, unsigned int), 16, 0));
+	case 'X':
+		return (print_unsigned_num_base(buf, idx,
+			va_arg(ap, unsigned int), 16, 1));
+	case 'p':
+	{
+		void *ptr = va_arg(ap, void *);
+		if (!ptr)
+		{
+			const char *nil = "(nil)";
+			buf_append(buf, idx, nil, 5);
+			return (5);
+		}
+		return (print_pointer(buf, idx, ptr));
+	}
+	default:
+		buf_putc(buf, idx, '%');
+		buf_putc(buf, idx, spec);
+		return (2);
+	}
+}
 
 /**
  * _printf - simplified printf implementation
@@ -13,95 +78,24 @@ int _printf(const char *format, ...)
 	char buf[BUFSIZE];
 	int idx = 0, total = 0;
 	const char *p;
-	char ch;
-	int added;
 
 	if (!format)
 		return (-1);
 
 	va_start(ap, format);
-	for (p = format; *p != '\0'; p++)
+	for (p = format; *p; p++)
 	{
-		if (*p != '%')
+		if (*p == '%')
+		{
+			p++;
+			if (!*p)
+				return (-1);
+			total += handle_specifier(*p, ap, buf, &idx);
+		}
+		else
 		{
 			buf_putc(buf, &idx, *p);
 			total++;
-			continue;
-		}
-		p++;
-		if (*p == '\0')
-		{
-			va_end(ap);
-			return (-1);
-		}
-		switch (*p)
-		{
-		case 'c':
-			ch = (char)va_arg(ap, int);
-			buf_putc(buf, &idx, ch), total++;
-			break;
-		case 's':
-		{
-			const char *s = va_arg(ap, char *);
-			if (!s)
-				s = "(null)";
-			while (*s)
-				buf_putc(buf, &idx, *s++), total++;
-			break;
-		}
-		case '%':
-			buf_putc(buf, &idx, '%'), total++;
-			break;
-		case 'd': case 'i':
-			added = print_number(buf, &idx, (long)va_arg(ap, int));
-			total += added;
-			break;
-		case 'b':
-			added = print_unsigned_num_base(buf, &idx,
-				va_arg(ap, unsigned int), 2, 0);
-			total += added;
-			break;
-		case 'u':
-			added = print_unsigned_num_base(buf, &idx,
-				va_arg(ap, unsigned int), 10, 0);
-			total += added;
-			break;
-		case 'o':
-			added = print_unsigned_num_base(buf, &idx,
-				va_arg(ap, unsigned int), 8, 0);
-			total += added;
-			break;
-		case 'x':
-			added = print_unsigned_num_base(buf, &idx,
-				va_arg(ap, unsigned int), 16, 0);
-			total += added;
-			break;
-		case 'X':
-			added = print_unsigned_num_base(buf, &idx,
-				va_arg(ap, unsigned int), 16, 1);
-			total += added;
-			break;
-		case 'p':
-		{
-			void *ptr = va_arg(ap, void *);
-			if (!ptr)
-			{
-				const char *nil = "(nil)";
-				buf_append(buf, &idx, nil, 5);
-				total += 5;
-			}
-			else
-			{
-				added = print_pointer(buf, &idx, ptr);
-				total += added;
-			}
-			break;
-		}
-		default:
-			buf_putc(buf, &idx, '%');
-			buf_putc(buf, &idx, *p);
-			total += 2;
-			break;
 		}
 	}
 	flush_buffer(buf, &idx);
