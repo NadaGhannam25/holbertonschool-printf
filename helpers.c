@@ -7,51 +7,31 @@ static char buffer[BUF_SIZE];
 static int buf_index = 0;
 
 /**
- * _putc_buffered - writes one char to buffer, flush if full
+ * _putc_buffered - write one char to buffer, flush if full
  * @c: char to write
- * @buf: buffer array
- * @index: current buffer index
  * Return: 1 on success
  */
-int _putc_buffered(char c, char *buf, int *index)
+int _putc_buffered(char c)
 {
-	if (*index >= BUF_SIZE)
-		*index = 0;
-	buf[(*index)++] = c;
-	if (*index == BUF_SIZE)
+	if (buf_index >= BUF_SIZE)
+		buf_index = 0;
+	buffer[buf_index++] = c;
+	if (buf_index == BUF_SIZE)
 	{
-		write(1, buf, BUF_SIZE);
-		*index = 0;
+		write(1, buffer, BUF_SIZE);
+		buf_index = 0;
 	}
 	return (1);
 }
 
 /**
  * flush_buffer - flush remaining chars in buffer
- * @buf: buffer array
- * @index: current buffer index
  */
-void flush_buffer(char *buf, int *index)
+void flush_buffer(void)
 {
-	if (*index > 0)
-		write(1, buf, *index);
-	*index = 0;
-}
-
-/**
- * _puts - writes string to buffer
- * @s: string to print
- * Return: number of chars printed
- */
-int _puts(char *s)
-{
-	int count = 0, i = 0;
-
-	if (!s)
-		s = "(null)";
-	while (s[i])
-		count += _putc_buffered(s[i++], buffer, &buf_index);
-	return (count);
+	if (buf_index > 0)
+		write(1, buffer, buf_index);
+	buf_index = 0;
 }
 
 /**
@@ -59,11 +39,9 @@ int _puts(char *s)
  * @n: number to print
  * @base: base (2,8,10,16)
  * @uppercase: 1 for uppercase hex, 0 for lowercase
- * @buf: buffer array
- * @index: current buffer index
  * Return: number of chars printed
  */
-int _puts_number(long n, int base, int uppercase, char *buf, int *index)
+int _puts_number(long n, int base, int uppercase)
 {
 	char digits[] = "0123456789abcdef";
 	char digits_u[] = "0123456789ABCDEF";
@@ -72,14 +50,12 @@ int _puts_number(long n, int base, int uppercase, char *buf, int *index)
 	unsigned long num;
 
 	if (uppercase)
-	{
 		for (i = 0; i < 16; i++)
 			digits[i] = digits_u[i];
-	}
 	i = 0;
 
 	if (n == 0)
-		return (_putc_buffered('0', buf, index));
+		return (_putc_buffered('0'));
 
 	if (n < 0)
 		num = -n;
@@ -93,7 +69,7 @@ int _puts_number(long n, int base, int uppercase, char *buf, int *index)
 	}
 
 	for (--i; i >= 0; i--)
-		count += _putc_buffered(tmp[i], buf, index);
+		count += _putc_buffered(tmp[i]);
 
 	return (count);
 }
