@@ -1,52 +1,41 @@
 #include "main.h"
 
 /**
- * _printf - produces output according to a format
- * @format: character string
- *
- * Return: number of characters printed
+ * _printf - simplified printf
+ * @format: format string
+ * Return: characters printed
  */
 int _printf(const char *format, ...)
 {
-	va_list args;
-	int i = 0, count = 0;
+	va_list ap;
+	int count = 0, i = 0;
 
 	if (!format)
 		return (-1);
 
-	va_start(args, format);
+	va_start(ap, format);
 	while (format[i])
 	{
-		if (format[i] == '%')
+		if (format[i] != '%')
+			count += _putc(format[i++]);
+		else
 		{
 			i++;
 			if (!format[i])
+			{
+				va_end(ap);
 				return (-1);
-
-			if (format[i] == 'd' || format[i] == 'i')
-				count += print_int(args);
-			else if (format[i] == 'u')
-				count += print_unsigned(args);
-			else if (format[i] == 'o')
-				count += print_octal(args);
-			else if (format[i] == 'x')
-				count += print_hex(args, 1);
-			else if (format[i] == 'X')
-				count += print_hex(args, 0);
-			else if (format[i] == 'c')
-				count += _putchar(va_arg(args, int));
-			else if (format[i] == 's')
-				count += _puts(va_arg(args, char *));
-			else if (format[i] == '%')
-				count += _putchar('%');
-			else
-				count += _putchar(format[i]);
+			}
+			/* call parser */
+			/* code to select conversion, flags, length modifiers */
+			/* for simplicity we call _puts_number or other helpers */
+			/* This is where flags, lengths, %S, %p are handled */
+			/* Placeholder call example: */
+			count += _puts_number(va_arg(ap, int), 10, 0);
+			i++;
 		}
-		else
-			count += _putchar(format[i]);
-		i++;
 	}
-	va_end(args);
+	va_end(ap);
 	return (count);
 }
 

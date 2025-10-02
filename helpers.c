@@ -1,58 +1,69 @@
 #include "main.h"
+#include <unistd.h>
 
 /**
- * _putchar - writes one character to stdout
- * @c: character
+ * _putc - writes a single character to stdout
+ * @c: character to print
  *
  * Return: 1 on success
  */
-int _putchar(char c)
+int _putc(char c)
 {
-	return (write(1, &c, 1));
+    return (write(1, &c, 1) == 1 ? 1 : 0);
 }
 
 /**
- * _puts - prints a string
- * @s: string
+ * _puts - writes a string to stdout
+ * @s: string to print
  *
- * Return: number of chars printed
+ * Return: number of characters printed
  */
-int _puts(char *s)
+int _puts(const char *s)
 {
-	int i = 0;
+    int n = 0;
 
-	if (!s)
-		s = "(null)";
-	while (s[i])
-	{
-		_putchar(s[i]);
-		i++;
-	}
-	return (i);
+    if (!s)
+        s = "(null)";
+    while (s[n])
+        n++;
+    if (n)
+        write(1, s, n);
+    return (n);
 }
 
 /**
- * convert - converts number to string in base
- * @num: number
- * @base: base
- * @lower: 1 for lowercase, 0 for uppercase
+ * _puts_number - prints a number in a given base
+ * @n: number to print
+ * @base: base (2, 8, 10, 16)
+ * @uppercase: use uppercase letters for hex
  *
- * Return: pointer to string
+ * Return: number of characters printed
  */
-char *convert(unsigned long int num, int base, int lower)
+int _puts_number(long n, int base, int uppercase)
 {
-	static char buffer[50];
-	char *digits;
-	char *ptr = &buffer[49];
+    char buf[65];
+    char *digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
+    int i = 64, count = 0;
+    unsigned long num;
 
-	digits = lower ? "0123456789abcdef" : "0123456789ABCDEF";
-	*ptr = '\0';
+    buf[i--] = '\0';
+    if (n < 0)
+        num = -n;
+    else
+        num = n;
 
-	do {
-		*--ptr = digits[num % base];
-		num /= base;
-	} while (num);
+    do {
+        buf[i--] = digits[num % base];
+        num /= base;
+    } while (num != 0);
 
-	return (ptr);
+    if (n < 0 && base == 10)
+        buf[i--] = '-';
+
+    i++;
+    while (buf[i])
+        count += _putc(buf[i++]);
+
+    return count;
 }
 
