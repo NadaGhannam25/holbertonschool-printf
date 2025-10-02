@@ -2,19 +2,22 @@
 #define MAIN_H
 
 #include <stdarg.h>
+#include <unistd.h>
 #include <limits.h>
+#include <stdlib.h>
 
-/* Core printf */
+/* _printf function */
 int _printf(const char *format, ...);
 
-/* Basic helpers */
+/* Helpers */
 int _putc(char c);
 int _puts(const char *s);
-int _puts_number(long n, int base, int uppercase);
-
-/* Extra helpers */
-int handle_flags(char flag, long *num, int is_signed);
-int handle_length(char length, va_list *ap, char sp);
+int handle_flags(char *s, char flag);
+int handle_precision(char *s, int prec, int is_number);
+int print_number(long n, int base, int is_unsigned, int is_upper, int prec);
+int print_string(char *s, int prec);
+int print_pointer(void *p);
+int print_custom_S(char *s);
 
 #endif
 

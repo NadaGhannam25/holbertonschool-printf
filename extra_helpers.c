@@ -1,57 +1,32 @@
 #include "main.h"
-#include <stdarg.h>
-#include <limits.h>
+#include <string.h>
 
-/**
- * handle_flags - adjust number for +, space, #
- * @flag: flag character
- * @num: number to adjust
- * @is_signed: 1 if signed
- * Return: 0 (placeholder, can integrate with _puts_number)
- */
-int handle_flags(char flag, long *num, int is_signed)
+/* handle precision for numbers and strings */
+int handle_precision(char *s, int prec, int is_number)
 {
-	(void)num;
-	(void)flag;
-	(void)is_signed;
-	/* يمكن توسعها لاحقًا */
-	return (0);
-}
+	int len = 0, i = 0, printed = 0;
 
-/**
- * handle_length - fetch argument by length modifier
- * @length: 'l' or 'h'
- * @ap: pointer to va_list
- * @sp: conversion specifier
- * Return: number of chars printed
- */
-int handle_length(char length, va_list *ap, char sp)
-{
-	long val = 0;
-	short sval = 0;
-	unsigned long uval = 0;
-	unsigned short usval = 0;
+	if (!s)
+		s = "(null)";
 
-	switch (length)
+	len = strlen(s);
+
+	if (is_number)
 	{
-		case 'l':
-			if (sp == 'd' || sp == 'i')
-				val = va_arg(*ap, long);
-			else
-				uval = va_arg(*ap, unsigned long);
-			return (_puts_number(val ? val : uval, 10, 0));
-		case 'h':
-			if (sp == 'd' || sp == 'i')
-				sval = (short)va_arg(*ap, int);
-			else
-				usval = (unsigned short)va_arg(*ap, unsigned int);
-			return (_puts_number(sval ? sval : usval, 10, 0));
-		default:
-			if (sp == 'd' || sp == 'i')
-				val = va_arg(*ap, int);
-			else
-				uval = va_arg(*ap, unsigned int);
-			return (_puts_number(val ? val : uval, 10, 0));
+		while (len < prec)
+		{
+			printed += _putc('0');
+			len++;
+		}
 	}
+
+	for (i = 0; i < len && (!is_number || i < len); i++)
+	{
+		if (!is_number && prec >= 0 && i >= prec)
+			break;
+		printed += _putc(s[i]);
+	}
+
+	return (printed);
 }
 
