@@ -108,8 +108,17 @@ static int print_conv(char sp, va_list *ap, char *buf, int *index)
 	case 'p':
 	{
 		void *ptr = va_arg(*ap, void *);
-		unsigned long addr = (unsigned long)ptr;
+		unsigned long addr;
 
+		if (!ptr)
+		{
+			s = "(nil)";
+			while (*s)
+				count += _putc_buffered(*s++, buf, index);
+			break;
+		}
+
+		addr = (unsigned long)ptr;
 		count += _putc_buffered('0', buf, index);
 		count += _putc_buffered('x', buf, index);
 		count += _puts_number(addr, 16, 0, buf, index);
