@@ -62,11 +62,18 @@ static int print_conv(char sp, va_list *ap, char *buf, int *index)
 			if (c < 32 || c >= 127)
 			{
 				count += _putc_buffered('\\', buf, index);
-				count += _putc_buffered('X', buf, index);
-			
-				if (c < 16)
-					count += _putc_buffered('0', buf, index);
-				count += _puts_number(c, 16, 1, buf, index);
+				count += _putc_buffered('x', buf, index); /* lowercase x */
+
+				/* always 2 chars hex, uppercase letters */
+				if (c / 16 < 10)
+					count += _putc_buffered('0' + (c / 16), buf, index);
+				else
+					count += _putc_buffered('A' + (c / 16 - 10), buf, index);
+
+				if (c % 16 < 10)
+					count += _putc_buffered('0' + (c % 16), buf, index);
+				else
+					count += _putc_buffered('A' + (c % 16 - 10), buf, index);
 			}
 			else
 				count += _putc_buffered(c, buf, index);
@@ -146,5 +153,4 @@ int _printf(const char *format, ...)
 	va_end(ap);
 	return (count);
 }
-
 
