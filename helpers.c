@@ -2,14 +2,14 @@
 #include <unistd.h>
 
 /**
- * _puts_number - writes a number in any base to buffer
+ * _puts_number - write a number in any base to buffer
  * @n: number to print
- * @base: numeric base (2, 8, 10, 16)
+ * @base: numeric base (2,8,10,16)
  * @uppercase: 1 for uppercase hex, 0 for lowercase
  * @buf: buffer array
- * @index: pointer to current index in buffer
+ * @index: pointer to current buffer index
  *
- * Return: number of characters added to buffer
+ * Return: number of characters added
  */
 int _puts_number(long n, int base, int uppercase, char *buf, int *index)
 {
@@ -39,23 +39,6 @@ int _puts_number(long n, int base, int uppercase, char *buf, int *index)
 
 	for (j = i - 1; j >= 0; j--)
 		count += _putc_buffered(b[j], buf, index);
-
-	return (count);
-}
-
-/**
- * _putc_buffered - writes char to buffer (needed in helpers too)
- */
-int _putc_buffered(char c, char *buf, int *index)
-{
-	int count = 0;
-
-	buf[(*index)++] = c;
-	if (*index == 1024)
-	{
-		count = write(1, buf, 1024);
-		*index = 0;
-	}
 
 	return (count);
 }

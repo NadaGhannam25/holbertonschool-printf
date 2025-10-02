@@ -1,13 +1,14 @@
 #include "main.h"
 #include <stdarg.h>
 #include <unistd.h>
+#include <limits.h>
 
 #define BUFFER_SIZE 1024
 
 /**
- * flush_buffer - writes the buffer to stdout and resets index
+ * flush_buffer - write contents of buffer to stdout and reset index
  * @buf: buffer array
- * @index: pointer to current index in buffer
+ * @index: pointer to current index
  *
  * Return: number of characters written
  */
@@ -24,14 +25,14 @@ static int flush_buffer(char *buf, int *index)
 }
 
 /**
- * _putc_buffered - adds a character to buffer, flushes if full
- * @c: character to write
+ * _putc_buffered - add a character to buffer; flush if full
+ * @c: character to add
  * @buf: buffer array
- * @index: pointer to current index in buffer
+ * @index: pointer to buffer index
  *
- * Return: number of characters written (0 or BUFFER_SIZE)
+ * Return: number of characters written directly
  */
-static int _putc_buffered(char c, char *buf, int *index)
+int _putc_buffered(char c, char *buf, int *index)
 {
 	int count = 0;
 
@@ -44,53 +45,70 @@ static int _putc_buffered(char c, char *buf, int *index)
 }
 
 /**
- * print_conv - handles a single conversion specifier
- * @sp: conversion specifier character
- * @ap: address of the variadic list
+ * print_conv - handle one conversion specifier
+ * @sp: conversion specifier
+ * @ap: variadic arguments
  * @buf: buffer array
- * @index: pointer to current index in buffer
+ * @index: pointer to buffer index
  *
- * Return: number of characters written directly
+ * Return: number of characters written
  */
 static int print_conv(char sp, va_list *ap, char *buf, int *index)
 {
 	int count = 0;
+	char *s;
+	long num;
 
-	if (sp == 'c')
-		count += _putc_buffered((char)va_arg(*ap, int), buf, index);
-	else if (sp == 's')
+	switch (sp)
 	{
-		char *s = va_arg(*ap, char *);
+	case 'c':
+		count += _putc_buffered((char)va_arg(*ap, int), buf, index);
+		break;
+	case 's':
+		s = va_arg(*ap, char *);
 		if (!s)
 			s = "(null)";
 		while (*s)
 			count += _putc_buffered(*s++, buf, index);
-	}
-	else if (sp == '%')
+		break;
+	case '%':
 		count += _putc_buffered('%', buf, index);
-	else if (sp == 'd' || sp == 'i')
-		count += _puts_number(va_arg(*ap, int), 10, 0, buf, index);
-	else if (sp == 'u')
-		count += _puts_number(va_arg(*ap, unsigned int), 10, 0, buf, index);
-	else if (sp == 'o')
-		count += _puts_number(va_arg(*ap, unsigned int), 8, 0, buf, index);
-	else if (sp == 'x')
-		count += _puts_number(va_arg(*ap, unsigned int), 16, 0, buf, index);
-	else if (sp == 'X')
-		count += _puts_number(va_arg(*ap, unsigned int), 16, 1, buf, index);
-	else if (sp == 'b')
-		count += _puts_number(va_arg(*ap, unsigned int), 2, 0, buf, index);
-	else
-	{
+		break;
+	case 'd':
+	case 'i':
+		num = va_arg(*ap, int);
+		count += _puts_number(num, 10, 0, buf, index);
+		break;
+	case 'u':
+		num = va_arg(*ap, unsigned int);
+		count += _puts_number(num, 10, 0, buf, index);
+		break;
+	case 'o':
+		num = va_arg(*ap, unsigned int);
+		count += _puts_number(num, 8, 0, buf, index);
+		break;
+	case 'x':
+		num = va_arg(*ap, unsigned int);
+		count += _puts_number(num, 16, 0, buf, index);
+		break;
+	case 'X':
+		num = va_arg(*ap, unsigned int);
+		count += _puts_number(num, 16, 1, buf, index);
+		break;
+	case 'b':
+		num = va_arg(*ap, unsigned int);
+		count += _puts_number(num, 2, 0, buf, index);
+		break;
+	default:
 		count += _putc_buffered('%', buf, index);
 		count += _putc_buffered(sp, buf, index);
+		break;
 	}
-
 	return (count);
 }
 
 /**
- * _printf - produces output according to a format
+ * _printf - formatted output to stdout using local buffer
  * @format: format string
  *
  * Return: number of characters printed, or -1 on error
@@ -105,6 +123,7 @@ int _printf(const char *format, ...)
 		return (-1);
 
 	va_start(ap, format);
+
 	while (format[i])
 	{
 		if (format[i] != '%')
@@ -120,10 +139,12 @@ int _printf(const char *format, ...)
 			count += print_conv(format[i++], &ap, buffer, &buf_index);
 		}
 	}
-	/* flush any remaining chars */
+
+	/* flush remaining characters */
 	count += flush_buffer(buffer, &buf_index);
 
 	va_end(ap);
 	return (count);
 }
+
 
