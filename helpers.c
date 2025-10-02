@@ -7,16 +7,14 @@ static char buffer[BUF_SIZE];
 static int buf_index = 0;
 
 /**
- * _putc_buffered - write one char to buffer, flush if full
+ * _putc_buffered - write a char to buffer, flush if full
  * @c: char to write
- * Return: 1 on success
+ * Return: 1
  */
 int _putc_buffered(char c)
 {
-	if (buf_index >= BUF_SIZE)
-		buf_index = 0;
 	buffer[buf_index++] = c;
-	if (buf_index == BUF_SIZE)
+	if (buf_index >= BUF_SIZE)
 	{
 		write(1, buffer, BUF_SIZE);
 		buf_index = 0;
@@ -25,7 +23,7 @@ int _putc_buffered(char c)
 }
 
 /**
- * flush_buffer - flush remaining chars in buffer
+ * flush_buffer - flush remaining chars
  */
 void flush_buffer(void)
 {
@@ -35,13 +33,15 @@ void flush_buffer(void)
 }
 
 /**
- * _puts_number - prints number in any base
- * @n: number to print
- * @base: base (2,8,10,16)
- * @uppercase: 1 for uppercase hex, 0 for lowercase
- * Return: number of chars printed
+ * _puts_number - print number in any base with flags
+ * @n: number
+ * @base: base
+ * @uppercase: 1 for hex uppercase
+ * @flag_plus: 1 to print '+' for positive
+ * @flag_space: 1 to print ' ' for positive
+ * Return: chars printed
  */
-int _puts_number(long n, int base, int uppercase)
+int _puts_number(long n, int base, int uppercase, int flag_plus, int flag_space)
 {
 	char digits[] = "0123456789abcdef";
 	char digits_u[] = "0123456789ABCDEF";
@@ -55,10 +55,19 @@ int _puts_number(long n, int base, int uppercase)
 	i = 0;
 
 	if (n == 0)
-		return (_putc_buffered('0'));
+	{
+		if (flag_plus)
+			count += _putc_buffered('+');
+		else if (flag_space)
+			count += _putc_buffered(' ');
+		return count + _putc_buffered('0');
+	}
 
 	if (n < 0)
+	{
+		count += _putc_buffered('-');
 		num = -n;
+	}
 	else
 		num = n;
 
