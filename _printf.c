@@ -6,9 +6,9 @@
 #define BUFFER_SIZE 1024
 
 /**
- * flush_buffer - write contents of buffer to stdout and reset index
+ * flush_buffer - write buffer contents to stdout and reset index
  * @buf: buffer array
- * @index: pointer to current index
+ * @index: pointer to current buffer index
  *
  * Return: number of characters written
  */
@@ -25,26 +25,6 @@ static int flush_buffer(char *buf, int *index)
 }
 
 /**
- * _putc_buffered - add a character to buffer; flush if full
- * @c: character to add
- * @buf: buffer array
- * @index: pointer to buffer index
- *
- * Return: number of characters written directly
- */
-int _putc_buffered(char c, char *buf, int *index)
-{
-	int count = 0;
-
-	buf[(*index)++] = c;
-
-	if (*index == BUFFER_SIZE)
-		count = flush_buffer(buf, index);
-
-	return (count);
-}
-
-/**
  * print_conv - handle one conversion specifier
  * @sp: conversion specifier
  * @ap: variadic arguments
@@ -57,6 +37,7 @@ static int print_conv(char sp, va_list *ap, char *buf, int *index)
 {
 	int count = 0;
 	char *s;
+	unsigned char c;
 	long num;
 
 	switch (sp)
@@ -70,6 +51,26 @@ static int print_conv(char sp, va_list *ap, char *buf, int *index)
 			s = "(null)";
 		while (*s)
 			count += _putc_buffered(*s++, buf, index);
+		break;
+	case 'S':
+		s = va_arg(*ap, char *);
+		if (!s)
+			s = "(null)";
+		while (*s)
+		{
+			c = (unsigned char)*s++;
+			if (c < 32 || c >= 127)
+			{
+				count += _putc_buffered('\\', buf, index);
+				count += _putc_buffered('X', buf, index);
+			
+				if (c < 16)
+					count += _putc_buffered('0', buf, index);
+				count += _puts_number(c, 16, 1, buf, index);
+			}
+			else
+				count += _putc_buffered(c, buf, index);
+		}
 		break;
 	case '%':
 		count += _putc_buffered('%', buf, index);
@@ -140,7 +141,6 @@ int _printf(const char *format, ...)
 		}
 	}
 
-	/* flush remaining characters */
 	count += flush_buffer(buffer, &buf_index);
 
 	va_end(ap);

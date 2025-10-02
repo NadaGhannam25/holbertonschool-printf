@@ -2,6 +2,26 @@
 #include <unistd.h>
 
 /**
+ * _putc_buffered - add a character to buffer; flush if full
+ * @c: character to add
+ * @buf: buffer array
+ * @index: pointer to buffer index
+ *
+ * Return: number of characters written directly
+ */
+int _putc_buffered(char c, char *buf, int *index)
+{
+	int count = 0;
+
+	buf[(*index)++] = c;
+
+	if (*index == 1024)
+		count = write(1, buf, *index), *index = 0;
+
+	return (count);
+}
+
+/**
  * _puts_number - write a number in any base to buffer
  * @n: number to print
  * @base: numeric base (2,8,10,16)
