@@ -1,104 +1,85 @@
 #include "main.h"
-#include <stdarg.h>
-#include <unistd.h>
 
 /**
- * write_char - prints a single character to stdout
- * @c: character to print
+ * _puts - write a C string to stdout
+ * @s: string (prints "(null)" if s is NULL)
  *
- * Return: 1 on success, 0 on failure
+ * Return: number of bytes written
  */
-static int write_char(char c)
+static int _puts(const char *s)
 {
-	if (write(1, &c, 1) != 1)
-		return (0);
-	return (1);
+	int n = 0;
+
+	if (!s)
+		s = "(null)";
+	while (s[n])
+		n++;
+	if (n)
+		write(1, s, n);
+	return (n);
 }
 
 /**
- * write_str - prints a string to stdout
- * @str: string to print
+ * _putc - write one character to stdout
+ * @c: character
  *
- * Return: number of characters printed
+ * Return: 1 on success
  */
-static int write_str(const char *str)
+static int _putc(char c)
 {
-	int i = 0;
-
-	if (!str)
-		str = "(null)";
-
-	while (str[i])
-	{
-		write_char(str[i]);
-		i++;
-	}
-	return (i);
+	return (write(1, &c, 1) == 1 ? 1 : 0);
 }
 
 /**
- * handle_format - handles a single format specifier
- * @fmt: format specifier character
- * @args: variadic argument list
+ * print_conv - handle one conversion specifier
+ * @sp: specifier character ('c', 's', or '%')
+ * @ap: address of the variadic list
  *
- * Return: number of characters printed
+ * Return: number of chars printed for this specifier
  */
-static int handle_format(char fmt, va_list args)
+static int print_conv(char sp, va_list *ap)
 {
-	if (fmt == 'c')
-		return (write_char((char)va_arg(args, int)));
-	if (fmt == 's')
-		return (write_str(va_arg(args, char *)));
-	if (fmt == '%')
-		return (write_char('%'));
+	if (sp == 'c')
+		return (_putc((char)va_arg(*ap, int)));
+	if (sp == 's')
+		return (_puts(va_arg(*ap, char *)));
+	if (sp == '%')
+		return (_putc('%'));
 
-	/* Unknown specifier: print the requested lines */
-	write_str("Correct output - case: _printf(\"%");
-	write_char(fmt);
-	write_str("\\n\");\n");
-
-	/* Also print % + unknown char */
-	write_char('%');
-	write_char(fmt);
-	write_char('\n');
-
-	return (4);
+	/* unknown specifier: print '%' then the char */
+	return (_putc('%') + _putc(sp));
 }
 
 /**
- * _printf - simplified printf function
- * @format: format string
+ * _printf - produces output according to a format
+ * @format: format string (supports %c, %s, %%)
  *
  * Return: number of characters printed, or -1 on error
  */
 int _printf(const char *format, ...)
 {
-	va_list args;
-	int total = 0;
-	int i = 0;
+	va_list ap;
+	int count = 0, i = 0;
 
 	if (!format)
 		return (-1);
 
-	va_start(args, format);
+	va_start(ap, format);
 	while (format[i])
 	{
-		if (format[i] == '%')
+		if (format[i] != '%')
+			count += _putc(format[i++]);
+		else
 		{
 			i++;
 			if (!format[i])
 			{
-				va_end(args);
+				va_end(ap);
 				return (-1);
 			}
-			total += handle_format(format[i], args);
+			count += print_conv(format[i++], &ap);
 		}
-		else
-		{
-			total += write_char(format[i]);
-		}
-		i++;
 	}
-	va_end(args);
-	return (total);
+	va_end(ap);
+	return (count);
 }
