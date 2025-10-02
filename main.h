@@ -2,10 +2,11 @@
 #define MAIN_H
 
 #include <stdarg.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 int _printf(const char *format, ...);
+int _putc(char c);
+int _puts(const char *s);
+int _puts_number(long n, int base, int uppercase);
 
 #endif
 
