@@ -69,6 +69,32 @@ static int _puts_int(int n)
 }
 
 /**
+ * _puts_unsigned - write an unsigned integer to stdout
+ * @n: unsigned integer to print
+ *
+ * Return: number of characters printed
+ */
+static int _puts_unsigned(unsigned int n)
+{
+    char buf[10];
+    int i = 0, j, count = 0;
+
+    if (n == 0)
+        return _putc('0');
+
+    while (n > 0)
+    {
+        buf[i++] = (n % 10) + '0';
+        n /= 10;
+    }
+
+    for (j = i - 1; j >= 0; j--)
+        count += _putc(buf[j]);
+
+    return count;
+}
+
+/**
  * _puts_binary - write an unsigned int in binary
  * @n: number to print
  *
@@ -95,8 +121,37 @@ static int _puts_binary(unsigned int n)
 }
 
 /**
+ * _puts_base - write an unsigned int in any base (octal/hex)
+ * @n: number to print
+ * @base: base (8 or 16)
+ * @uppercase: 1 for uppercase hex, 0 for lowercase
+ *
+ * Return: number of characters printed
+ */
+static int _puts_base(unsigned int n, int base, int uppercase)
+{
+    char buf[32];
+    char *digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
+    int i = 0, j, count = 0;
+
+    if (n == 0)
+        return _putc('0');
+
+    while (n > 0)
+    {
+        buf[i++] = digits[n % base];
+        n /= base;
+    }
+
+    for (j = i - 1; j >= 0; j--)
+        count += _putc(buf[j]);
+
+    return count;
+}
+
+/**
  * print_conv - handle one conversion specifier
- * @sp: specifier character ('c', 's', '%', 'd', 'i', 'b')
+ * @sp: specifier character ('c', 's', '%', 'd', 'i', 'b', 'u', 'o', 'x', 'X')
  * @ap: address of the variadic list
  *
  * Return: number of chars printed for this specifier
@@ -113,13 +168,21 @@ static int print_conv(char sp, va_list *ap)
         return (_puts_int(va_arg(*ap, int)));
     if (sp == 'b')
         return (_puts_binary(va_arg(*ap, unsigned int)));
+    if (sp == 'u')
+        return (_puts_unsigned(va_arg(*ap, unsigned int)));
+    if (sp == 'o')
+        return (_puts_base(va_arg(*ap, unsigned int), 8, 0));
+    if (sp == 'x')
+        return (_puts_base(va_arg(*ap, unsigned int), 16, 0));
+    if (sp == 'X')
+        return (_puts_base(va_arg(*ap, unsigned int), 16, 1));
 
     return (_putc('%') + _putc(sp));
 }
 
 /**
  * _printf - produces output according to a format
- * @format: format string (supports %c, %s, %%, %d, %i, %b)
+ * @format: format string
  *
  * Return: number of characters printed, or -1 on error
  */
