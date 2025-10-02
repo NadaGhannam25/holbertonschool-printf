@@ -1,155 +1,142 @@
+#include "main.h"
 #include <stdarg.h>
 #include <unistd.h>
-#include "main.h"
 
-/* ---------------- basic helpers ---------------- */
-
-int _putchar(char c)
+/**
+ * handle_char - Handles the %c format specifier
+ * @args: Argument list containing the character
+ *
+ * Return: Number of characters printed
+ */
+int handle_char(va_list args)
 {
-    return (write(1, &c, 1));
+	char c = va_arg(args, int);
+
+	return (_putchar(c));
 }
 
-int _puts(const char *s)
+/**
+ * handle_string - Handles the %s format specifier
+ * @args: Argument list containing the string
+ *
+ * Return: Number of characters printed
+ */
+int handle_string(va_list args)
 {
-    int n = 0;
+	int count = 0;
+	char *str = va_arg(args, char *);
 
-    if (!s)
-        s = "(null)";
-    while (*s)
-        n += _putchar(*s++);
-    return (n);
+	if (!str)
+		str = "(null)";
+
+	while (*str)
+	{
+		count += _putchar(*str);
+		str++;
+	}
+	return (count);
 }
 
-/* print numbers in base (10, 16, 8, 2) */
-int print_unsigned(unsigned long n, int base, int upper)
+/**
+ * handle_percent - Handles the %% format specifier
+ *
+ * Return: Number of characters printed
+ */
+int handle_percent(void)
 {
-    char digits[] = "0123456789abcdef";
-    char DIGITS[] = "0123456789ABCDEF";
-    char buf[65];
-    int i = 0, count = 0;
-    char *use = upper ? DIGITS : digits;
-
-    if (n == 0)
-        return (_putchar('0'));
-
-    while (n > 0)
-    {
-        buf[i++] = use[n % base];
-        n /= base;
-    }
-    while (i--)
-        count += _putchar(buf[i]);
-    return (count);
+	return (_putchar('%'));
 }
 
-int print_signed(long n, int plus, int space)
+/**
+ * handle_int - Handles %d and %i format specifiers
+ * @args: Argument list containing the integer
+ *
+ * Return: Number of characters printed
+ */
+int handle_int(va_list args)
 {
-    unsigned long u;
-    int count = 0;
+	int n = va_arg(args, int);
+	unsigned int num;
+	int count = 0;
 
-    if (n < 0)
-    {
-        count += _putchar('-');
-        u = -n;
-    }
-    else
-    {
-        if (plus)
-            count += _putchar('+');
-        else if (space)
-            count += _putchar(' ');
-        u = n;
-    }
-    return (count + print_unsigned(u, 10, 0));
+	if (n < 0)
+	{
+		count += _putchar('-');
+		num = -n;
+	}
+	else
+	{
+		num = n;
+	}
+
+	if (num / 10)
+		count += handle_int_num(num / 10);
+
+	count += _putchar((num % 10) + '0');
+
+	return (count);
 }
 
-/* ---------------- conversion handler ---------------- */
-
-int handle_spec(char sp, va_list ap, int plus, int space, int hash, int lenmod)
+/**
+ * handle_int_num - helper for handle_int (recursive printing)
+ * @n: number to print
+ *
+ * Return: number of chars printed
+ */
+int handle_int_num(unsigned int n)
 {
-    int count = 0;
+	int count = 0;
 
-    if (sp == 'c')
-        return (_putchar(va_arg(ap, int)));
-    else if (sp == 's')
-        return (_puts(va_arg(ap, char *)));
-    else if (sp == '%')
-        return (_putchar('%'));
-    else if (sp == 'd' || sp == 'i')
-    {
-        long v = (lenmod == 2) ? va_arg(ap, long) :
-                 (lenmod == 1) ? (short)va_arg(ap, int) :
-                                  va_arg(ap, int);
-        return (print_signed(v, plus, space));
-    }
-    else if (sp == 'u' || sp == 'o' || sp == 'x' || sp == 'X')
-    {
-        unsigned long u = (lenmod == 2) ? va_arg(ap, unsigned long) :
-                           (lenmod == 1) ? (unsigned short)va_arg(ap, unsigned int) :
-                                           va_arg(ap, unsigned int);
-        int base = (sp == 'o') ? 8 : (sp == 'u') ? 10 : 16;
-        if (hash && u != 0)
-        {
-            if (sp == 'o') count += _putchar('0');
-            else if (sp == 'x') { count += _putchar('0'); count += _putchar('x'); }
-            else if (sp == 'X') { count += _putchar('0'); count += _putchar('X'); }
-        }
-        return (count + print_unsigned(u, base, (sp == 'X')));
-    }
-    else if (sp == 'p')
-    {
-        void *ptr = va_arg(ap, void *);
-        if (!ptr)
-            return (_puts("(nil)"));
-        count += _puts("0x");
-        return (count + print_unsigned((unsigned long)ptr, 16, 0));
-    }
-    return (0);
+	if (n / 10)
+		count += handle_int_num(n / 10);
+
+	count += _putchar((n % 10) + '0');
+
+	return (count);
 }
 
-/* ---------------- main printf ---------------- */
-
+/**
+ * _printf - Produces output according to a format
+ * @format: Format string containing specifiers
+ *
+ * Return: Number of characters printed
+ */
 int _printf(const char *format, ...)
 {
-    va_list ap;
-    int count = 0;
-    int plus, space, hash, lenmod;
+	int count = 0;
+	va_list args;
 
-    if (!format)
-        return (-1);
+	if (!format)
+		return (-1);
 
-    va_start(ap, format);
-    while (*format)
-    {
-        if (*format != '%')
-        {
-            count += _putchar(*format++);
-            continue;
-        }
-        format++; /* skip % */
+	va_start(args, format);
+	while (*format)
+	{
+		if (*format == '%')
+		{
+			format++;
+			if (*format == 'c')
+				count += handle_char(args);
+			else if (*format == 's')
+				count += handle_string(args);
+			else if (*format == '%')
+				count += handle_percent();
+			else if (*format == 'd' || *format == 'i')
+				count += handle_int(args);
+			else
+			{
+				count += _putchar('%');
+				count += _putchar(*format);
+			}
+		}
+		else
+		{
+			count += _putchar(*format);
+		}
+		format++;
+	}
+	va_end(args);
 
-        /* reset flags */
-        plus = space = hash = 0;
-        lenmod = 0;
-
-        /* flags */
-        while (*format == '+' || *format == ' ' || *format == '#')
-        {
-            if (*format == '+') plus = 1;
-            else if (*format == ' ') space = 1;
-            else if (*format == '#') hash = 1;
-            format++;
-        }
-
-        /* length modifiers */
-        if (*format == 'h') { lenmod = 1; format++; }
-        else if (*format == 'l') { lenmod = 2; format++; }
-
-        /* specifier */
-        if (*format)
-            count += handle_spec(*format++, ap, plus, space, hash, lenmod);
-    }
-    va_end(ap);
-    return (count);
+	return (count);
 }
 
