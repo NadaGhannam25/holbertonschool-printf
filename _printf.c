@@ -1,155 +1,23 @@
 #include "main.h"
 #include <stdarg.h>
-#include <unistd.h>
 #include <limits.h>
 
-#define BUFFER_SIZE 1024
+static int print_conv(char sp, va_list *ap, char *buf, int *index);
 
 /**
- * flush_buffer - write buffer contents to stdout and reset index
- * @buf: buffer array
- * @index: pointer to current buffer index
- *
- * Return: number of characters written
- */
-static int flush_buffer(char *buf, int *index)
-{
-	int written = 0;
-
-	if (*index > 0)
-	{
-		written = write(1, buf, *index);
-		*index = 0;
-	}
-	return (written);
-}
-
-/**
- * print_conv - handle a single conversion specifier
- * @sp: conversion specifier character
- * @ap: variadic arguments
- * @buf: buffer array
- * @index: pointer to buffer index
- *
- * Return: number of characters written
- */
-static int print_conv(char sp, va_list *ap, char *buf, int *index)
-{
-	int count = 0;
-	char *s;
-	unsigned char c;
-	long num;
-
-	switch (sp)
-	{
-	case 'c':
-		count += _putc_buffered((char)va_arg(*ap, int), buf, index);
-		break;
-	case 's':
-		s = va_arg(*ap, char *);
-		if (!s)
-			s = "(null)";
-		while (*s)
-			count += _putc_buffered(*s++, buf, index);
-		break;
-	case 'S':
-		s = va_arg(*ap, char *);
-		if (!s)
-			s = "(null)";
-		while (*s)
-		{
-			c = (unsigned char)*s++;
-			if (c < 32 || c >= 127)
-			{
-				count += _putc_buffered('\\', buf, index);
-				count += _putc_buffered('x', buf, index);
-				if (c / 16 < 10)
-					count += _putc_buffered('0' + (c / 16), buf, index);
-				else
-					count += _putc_buffered('A' + (c / 16 - 10), buf, index);
-
-				if (c % 16 < 10)
-					count += _putc_buffered('0' + (c % 16), buf, index);
-				else
-					count += _putc_buffered('A' + (c % 16 - 10), buf, index);
-			}
-			else
-				count += _putc_buffered(c, buf, index);
-		}
-		break;
-	case '%':
-		count += _putc_buffered('%', buf, index);
-		break;
-	case 'd':
-	case 'i':
-		num = va_arg(*ap, int);
-		count += _puts_number(num, 10, 0, buf, index);
-		break;
-	case 'u':
-		num = va_arg(*ap, unsigned int);
-		count += _puts_number(num, 10, 0, buf, index);
-		break;
-	case 'o':
-		num = va_arg(*ap, unsigned int);
-		count += _puts_number(num, 8, 0, buf, index);
-		break;
-	case 'x':
-		num = va_arg(*ap, unsigned int);
-		count += _puts_number(num, 16, 0, buf, index);
-		break;
-	case 'X':
-		num = va_arg(*ap, unsigned int);
-		count += _puts_number(num, 16, 1, buf, index);
-		break;
-	case 'b':
-		num = va_arg(*ap, unsigned int);
-		count += _puts_number(num, 2, 0, buf, index);
-		break;
-	case 'p':
-	{
-		void *ptr = va_arg(*ap, void *);
-		unsigned long addr;
-
-		if (!ptr)
-		{
-			s = "(nil)";
-			while (*s)
-				count += _putc_buffered(*s++, buf, index);
-			break;
-		}
-
-		addr = (unsigned long)ptr;
-		count += _putc_buffered('0', buf, index);
-		count += _putc_buffered('x', buf, index);
-		count += _puts_number(addr, 16, 0, buf, index);
-	}
-	break;
-	default:
-		count += _putc_buffered('%', buf, index);
-		count += _putc_buffered(sp, buf, index);
-		break;
-	}
-
-	return (count);
-}
-
-/**
- * _printf - formatted output to stdout using buffer
+ * _printf - formatted output
  * @format: format string
- *
- * Return: number of characters printed, or -1 on error
+ * Return: number of chars printed or -1
  */
 int _printf(const char *format, ...)
 {
 	va_list ap;
-	int count = 0, i = 0, buf_index = 0;
-	char buffer[BUFFER_SIZE];
+	int count = 0, i = 0;
 
 	if (!format)
 		return (-1);
 
 	va_start(ap, format);
-
 	while (format[i])
 	{
 		if (format[i] != '%')
@@ -165,10 +33,101 @@ int _printf(const char *format, ...)
 			count += print_conv(format[i++], &ap, buffer, &buf_index);
 		}
 	}
-
-	count += flush_buffer(buffer, &buf_index);
+	flush_buffer(buffer, &buf_index);
 	va_end(ap);
+	return (count);
+}
 
+/**
+ * print_conv - handle conversion specifier + flags
+ * @sp: conversion specifier
+ * @ap: variadic list
+ * @buf: buffer array
+ * @index: current buffer index
+ * Return: number of chars printed
+ */
+static int print_conv(char sp, va_list *ap, char *buf, int *index)
+{
+	int count = 0;
+	unsigned long num;
+	long n;
+	char flag_plus = 0, flag_space = 0, flag_hash = 0;
+	char c;
+
+	while (sp == '+' || sp == ' ' || sp == '#')
+	{
+		if (sp == '+')
+			flag_plus = 1;
+		else if (sp == ' ')
+			flag_space = 1;
+		else if (sp == '#')
+			flag_hash = 1;
+		sp = va_arg(*ap, int);
+	}
+
+	switch (sp)
+	{
+		case 'c':
+			c = (char)va_arg(*ap, int);
+			count += _putc_buffered(c, buf, index);
+			break;
+		case 's':
+			count += _puts(va_arg(*ap, char *));
+			break;
+		case '%':
+			count += _putc_buffered('%', buf, index);
+			break;
+		case 'd':
+		case 'i':
+			n = va_arg(*ap, long);
+			if (n < 0)
+			{
+				count += _putc_buffered('-', buf, index);
+				n = -n;
+			}
+			else if (flag_plus)
+				count += _putc_buffered('+', buf, index);
+			else if (flag_space)
+				count += _putc_buffered(' ', buf, index);
+			count += _puts_number(n, 10, 0, buf, index);
+			break;
+		case 'u':
+			num = va_arg(*ap, unsigned int);
+			count += _puts_number(num, 10, 0, buf, index);
+			break;
+		case 'o':
+			num = va_arg(*ap, unsigned int);
+			if (flag_hash && num != 0)
+				count += _putc_buffered('0', buf, index);
+			count += _puts_number(num, 8, 0, buf, index);
+			break;
+		case 'x':
+			num = va_arg(*ap, unsigned int);
+			if (flag_hash && num != 0)
+			{
+				count += _putc_buffered('0', buf, index);
+				count += _putc_buffered('x', buf, index);
+			}
+			count += _puts_number(num, 16, 0, buf, index);
+			break;
+		case 'X':
+			num = va_arg(*ap, unsigned int);
+			if (flag_hash && num != 0)
+			{
+				count += _putc_buffered('0', buf, index);
+				count += _putc_buffered('X', buf, index);
+			}
+			count += _puts_number(num, 16, 1, buf, index);
+			break;
+		case 'b':
+			num = va_arg(*ap, unsigned int);
+			count += _puts_number(num, 2, 0, buf, index);
+			break;
+		default:
+			count += _putc_buffered('%', buf, index);
+			count += _putc_buffered(sp, buf, index);
+			break;
+	}
 	return (count);
 }
 
