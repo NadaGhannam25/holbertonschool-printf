@@ -1,9 +1,11 @@
 #include "main.h"
+#include <stdarg.h>
 
 /**
- * _printf - simplified printf
+ * _printf - produces output according to a format
  * @format: format string
- * Return: characters printed
+ *
+ * Return: number of characters printed, or -1 on error
  */
 int _printf(const char *format, ...)
 {
@@ -26,16 +28,12 @@ int _printf(const char *format, ...)
 				va_end(ap);
 				return (-1);
 			}
-			/* call parser */
-			/* code to select conversion, flags, length modifiers */
-			/* for simplicity we call _puts_number or other helpers */
-			/* This is where flags, lengths, %S, %p are handled */
-			/* Placeholder call example: */
-			count += _puts_number(va_arg(ap, int), 10, 0);
-			i++;
+			/* Handle conversion specifiers and length */
+			count += handle_length(format[i++], &ap, format[i]);
 		}
 	}
 	va_end(ap);
+
 	return (count);
 }
 
