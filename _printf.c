@@ -1,124 +1,92 @@
 #include "main.h"
-#include <stdarg.h>
-#include <unistd.h>
-#include <limits.h>
 
 /**
- * _putc - write one character to stdout
- * @c: character
+ * put_char - prints a single character
+ * @c: character to print
  *
- * Return: 1 on success
+ * Return: number of characters printed (1 or 0 on error)
  */
-static int _putc(char c)
+static int put_char(char c)
 {
-    return (write(1, &c, 1) == 1 ? 1 : 0);
+	if (write(1, &c, 1) < 0)
+		return (0);
+	return (1);
 }
 
 /**
- * _puts - write a C string to stdout
- * @s: string (prints "(null)" if s is NULL)
- *
- * Return: number of bytes written
- */
-static int _puts(const char *s)
-{
-    int n = 0;
-
-    if (!s)
-        s = "(null)";
-    while (s[n])
-        n++;
-    if (n)
-        write(1, s, n);
-    return (n);
-}
-
-/**
- * _puts_int - write an integer to stdout
- * @n: integer to print
+ * put_str - prints a string
+ * @str: string to print
  *
  * Return: number of characters printed
  */
-static int _puts_int(int n)
+static int put_str(const char *str)
 {
-    char buf[12];
-    int i = 0, j, count = 0;
-    unsigned int num;
+	int i = 0;
 
-    if (n < 0)
-    {
-        count += _putc('-');
-        num = -n;
-    }
-    else
-        num = n;
+	if (!str)
+		str = "(null)";
 
-    if (num == 0)
-        return count + _putc('0');
-
-    while (num > 0)
-    {
-        buf[i++] = (num % 10) + '0';
-        num /= 10;
-    }
-
-    for (j = i - 1; j >= 0; j--)
-        count += _putc(buf[j]);
-
-    return count;
+	while (str[i])
+	{
+		put_char(str[i]);
+		i++;
+	}
+	return (i);
 }
 
 /**
- * print_conv - handle one conversion specifier
- * @sp: specifier character ('c', 's', '%', 'd', 'i')
- * @ap: address of the variadic list
+ * handle_specifier - handles a format specifier
+ * @fmt: the specifier character
+ * @ap: variadic argument list
  *
- * Return: number of chars printed for this specifier
+ * Return: number of characters printed
  */
-static int print_conv(char sp, va_list *ap)
+static int handle_specifier(char fmt, va_list ap)
 {
-    if (sp == 'c')
-        return (_putc((char)va_arg(*ap, int)));
-    if (sp == 's')
-        return (_puts(va_arg(*ap, char *)));
-    if (sp == '%')
-        return (_putc('%'));
-    if (sp == 'd' || sp == 'i')
-        return (_puts_int(va_arg(*ap, int)));
+	if (fmt == 'c')
+		return (put_char((char)va_arg(ap, int)));
+	if (fmt == 's')
+		return (put_str(va_arg(ap, char *)));
+	if (fmt == '%')
+		return (put_char('%'));
 
-    return (_putc('%') + _putc(sp));
+	/* if specifier is unknown, print it as "%x" */
+	put_char('%');
+	return (put_char(fmt));
 }
 
 /**
- * _printf - produces output according to a format
- * @format: format string (supports %c, %s, %%, %d, %i)
+ * _printf - simplified printf function
+ * @format: format string
  *
- * Return: number of characters printed, or -1 on error
+ * Return: total number of characters printed, or -1 if error
  */
 int _printf(const char *format, ...)
 {
-    va_list ap;
-    int count = 0, i = 0;
+	va_list ap;
+	int total = 0, i = 0;
 
-    if (!format)
-        return (-1);
+	if (!format)
+		return (-1);
 
-    va_start(ap, format);
-    while (format[i])
-    {
-        if (format[i] != '%')
-            count += _putc(format[i++]);
-        else
-        {
-            i++;
-            if (!format[i])
-            {
-                va_end(ap);
-                return (-1);
-            }
-            count += print_conv(format[i++], &ap);
-        }
-    }
-    va_end(ap);
-    return (count);
+	va_start(ap, format);
+	while (format[i])
+	{
+		if (format[i] == '%')
+		{
+			i++;
+			if (!format[i])
+			{
+				va_end(ap);
+				return (-1);
+			}
+			total += handle_specifier(format[i], ap);
+		}
+		else
+			total += put_char(format[i]);
+		i++;
+	}
+	va_end(ap);
+	return (total);
 }
+
