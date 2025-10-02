@@ -31,35 +31,9 @@ static int _putc(char c)
 }
 
 /**
- * _putnbr - print integer
- * @n: number
- *
- * Return: number of characters printed
- */
-static int _putnbr(int n)
-{
-	unsigned int num;
-	int count = 0;
-
-	if (n < 0)
-	{
-		count += _putc('-');
-		num = -n;
-	}
-	else
-		num = n;
-
-	if (num / 10)
-		count += _putnbr(num / 10);
-
-	count += _putc((num % 10) + '0');
-	return (count);
-}
-
-/**
  * _putnbr_base - print unsigned int in any base
  * @n: number
- * @base: base (e.g., 2, 8, 10, 16)
+ * @base: base (e.g., 8, 10, 16)
  * @uppercase: flag for uppercase hex
  *
  * Return: number of characters printed
@@ -102,10 +76,6 @@ static int print_conv(char sp, va_list *ap)
 		return (_puts(va_arg(*ap, char *)));
 	if (sp == '%')
 		return (_putc('%'));
-	if (sp == 'd' || sp == 'i')
-		return (_putnbr(va_arg(*ap, int)));
-	if (sp == 'b')
-		return (_putnbr_base(va_arg(*ap, unsigned int), 2, 0));
 	if (sp == 'u')
 		return (_putnbr_base(va_arg(*ap, unsigned int), 10, 0));
 	if (sp == 'o')
@@ -152,3 +122,4 @@ int _printf(const char *format, ...)
 	va_end(ap);
 	return (count);
 }
+
