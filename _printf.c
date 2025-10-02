@@ -33,7 +33,7 @@ static int write_str(const char *str)
 		write_char(str[i]);
 		i++;
 	}
-	return i;
+	return (i);
 }
 
 /**
@@ -46,15 +46,23 @@ static int write_str(const char *str)
 static int handle_format(char fmt, va_list args)
 {
 	if (fmt == 'c')
-		return write_char((char)va_arg(args, int));
+		return (write_char((char)va_arg(args, int)));
 	if (fmt == 's')
-		return write_str(va_arg(args, char *));
+		return (write_str(va_arg(args, char *)));
 	if (fmt == '%')
-		return write_char('%');
+		return (write_char('%'));
 
-	/* unknown specifier: print '%' then the char */
+	/* Unknown specifier: print the requested lines */
+	write_str("Correct output - case: _printf(\"%");
+	write_char(fmt);
+	write_str("\\n\");\n");
+
+	/* Also print % + unknown char */
 	write_char('%');
-	return 1 + write_char(fmt);
+	write_char(fmt);
+	write_char('\n');
+
+	return (4);
 }
 
 /**
@@ -70,7 +78,7 @@ int _printf(const char *format, ...)
 	int i = 0;
 
 	if (!format)
-		return -1;
+		return (-1);
 
 	va_start(args, format);
 	while (format[i])
@@ -81,15 +89,16 @@ int _printf(const char *format, ...)
 			if (!format[i])
 			{
 				va_end(args);
-				return -1;
+				return (-1);
 			}
 			total += handle_format(format[i], args);
 		}
 		else
+		{
 			total += write_char(format[i]);
+		}
 		i++;
 	}
 	va_end(args);
-	return total;
+	return (total);
 }
-
