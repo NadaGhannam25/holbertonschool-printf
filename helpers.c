@@ -1,85 +1,89 @@
 #include "main.h"
 #include <unistd.h>
-
-#define BUF_SIZE 1024
-
-static char buffer[BUF_SIZE];
-static int buf_index = 0;
+#include <limits.h>
+#include <stdlib.h>
 
 /**
- * _putc_buffered - write a char to buffer, flush if full
- * @c: char to write
- * Return: 1
+ * _putc - write one character to stdout
+ * @c: character
+ *
+ * Return: 1 on success
  */
-int _putc_buffered(char c)
+int _putc(char c)
 {
-	buffer[buf_index++] = c;
-	if (buf_index >= BUF_SIZE)
-	{
-		write(1, buffer, BUF_SIZE);
-		buf_index = 0;
-	}
-	return (1);
+    return write(1, &c, 1) == 1 ? 1 : 0;
 }
 
 /**
- * flush_buffer - flush remaining chars
+ * _puts - write a string to stdout
+ * @s: string
+ *
+ * Return: number of chars printed
  */
-void flush_buffer(void)
+int _puts(const char *s)
 {
-	if (buf_index > 0)
-		write(1, buffer, buf_index);
-	buf_index = 0;
+    int n = 0;
+
+    if (!s)
+        s = "(null)";
+    while (s[n])
+        n++;
+    if (n)
+        write(1, s, n);
+    return n;
 }
 
 /**
- * _puts_number - print number in any base with flags
- * @n: number
- * @base: base
- * @uppercase: 1 for hex uppercase
- * @flag_plus: 1 to print '+' for positive
- * @flag_space: 1 to print ' ' for positive
+ * _puts_number - print number with base and flags
+ * @n: number to print
+ * @base: base (2, 8, 10, 16)
+ * @uppercase: 1 for uppercase hex
+ * @flags: bitwise flags (plus, space, hash)
+ *
  * Return: chars printed
  */
-int _puts_number(long n, int base, int uppercase, int flag_plus, int flag_space)
+int _puts_number(long n, int base, int uppercase, int flags)
 {
-	char digits[] = "0123456789abcdef";
-	char digits_u[] = "0123456789ABCDEF";
-	char tmp[65];
-	int i = 0, count = 0;
-	unsigned long num;
+    char buf[65];
+    char *digits = uppercase ? "0123456789ABCDEF" : "0123456789abcdef";
+    unsigned long num;
+    int i = 0, j, count = 0;
 
-	if (uppercase)
-		for (i = 0; i < 16; i++)
-			digits[i] = digits_u[i];
-	i = 0;
+    if (base == 10 && n < 0)
+    {
+        count += _putc('-');
+        num = -n;
+    }
+    else
+        num = (unsigned long)n;
 
-	if (n == 0)
-	{
-		if (flag_plus)
-			count += _putc_buffered('+');
-		else if (flag_space)
-			count += _putc_buffered(' ');
-		return count + _putc_buffered('0');
-	}
+    if (num == 0)
+    {
+        if (flags & FLAG_PLUS)
+            count += _putc('+');
+        else if (flags & FLAG_SPACE)
+            count += _putc(' ');
+        return count + _putc('0');
+    }
 
-	if (n < 0)
-	{
-		count += _putc_buffered('-');
-		num = -n;
-	}
-	else
-		num = n;
+    while (num > 0)
+    {
+        buf[i++] = digits[num % base];
+        num /= base;
+    }
 
-	while (num > 0)
-	{
-		tmp[i++] = digits[num % base];
-		num /= base;
-	}
+    if ((flags & FLAG_HASH) && base == 8)
+        count += _putc('0');
+    else if ((flags & FLAG_HASH) && base == 16)
+        count += _putc('0') + _putc(uppercase ? 'X' : 'x');
+    else if ((flags & FLAG_PLUS) && base == 10 && n >= 0)
+        count += _putc('+');
+    else if ((flags & FLAG_SPACE) && base == 10 && n >= 0)
+        count += _putc(' ');
 
-	for (--i; i >= 0; i--)
-		count += _putc_buffered(tmp[i]);
+    for (j = i - 1; j >= 0; j--)
+        count += _putc(buf[j]);
 
-	return (count);
+    return count;
 }
 
