@@ -25,8 +25,8 @@ static int flush_buffer(char *buf, int *index)
 }
 
 /**
- * print_conv - handle one conversion specifier
- * @sp: conversion specifier
+ * print_conv - handle a single conversion specifier
+ * @sp: conversion specifier character
  * @ap: variadic arguments
  * @buf: buffer array
  * @index: pointer to buffer index
@@ -62,9 +62,7 @@ static int print_conv(char sp, va_list *ap, char *buf, int *index)
 			if (c < 32 || c >= 127)
 			{
 				count += _putc_buffered('\\', buf, index);
-				count += _putc_buffered('x', buf, index); /* lowercase x */
-
-				/* always 2 chars hex, uppercase letters */
+				count += _putc_buffered('x', buf, index);
 				if (c / 16 < 10)
 					count += _putc_buffered('0' + (c / 16), buf, index);
 				else
@@ -107,16 +105,27 @@ static int print_conv(char sp, va_list *ap, char *buf, int *index)
 		num = va_arg(*ap, unsigned int);
 		count += _puts_number(num, 2, 0, buf, index);
 		break;
+	case 'p':
+	{
+		void *ptr = va_arg(*ap, void *);
+		unsigned long addr = (unsigned long)ptr;
+
+		count += _putc_buffered('0', buf, index);
+		count += _putc_buffered('x', buf, index);
+		count += _puts_number(addr, 16, 0, buf, index);
+	}
+	break;
 	default:
 		count += _putc_buffered('%', buf, index);
 		count += _putc_buffered(sp, buf, index);
 		break;
 	}
+
 	return (count);
 }
 
 /**
- * _printf - formatted output to stdout using local buffer
+ * _printf - formatted output to stdout using buffer
  * @format: format string
  *
  * Return: number of characters printed, or -1 on error
@@ -149,8 +158,8 @@ int _printf(const char *format, ...)
 	}
 
 	count += flush_buffer(buffer, &buf_index);
-
 	va_end(ap);
+
 	return (count);
 }
 
