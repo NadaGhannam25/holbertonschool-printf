@@ -3,25 +3,25 @@
 #include <unistd.h>
 
 /**
- * put_char - prints a single character
+ * write_char - prints a single character to stdout
  * @c: character to print
  *
- * Return: number of characters printed (1 or 0 on error)
+ * Return: 1 on success, 0 on failure
  */
-static int put_char(char c)
+static int write_char(char c)
 {
-	if (write(1, &c, 1) < 0)
+	if (write(1, &c, 1) != 1)
 		return (0);
 	return (1);
 }
 
 /**
- * put_str - prints a string
+ * write_str - prints a string to stdout
  * @str: string to print
  *
  * Return: number of characters printed
  */
-static int put_str(const char *str)
+static int write_str(const char *str)
 {
 	int i = 0;
 
@@ -30,55 +30,49 @@ static int put_str(const char *str)
 
 	while (str[i])
 	{
-		put_char(str[i]);
+		write_char(str[i]);
 		i++;
 	}
 	return i;
 }
 
 /**
- * handle_specifier - handles a format specifier
- * @fmt: the specifier character
- * @ap: variadic argument list
+ * handle_format - handles a single format specifier
+ * @fmt: format specifier character
+ * @args: variadic argument list
  *
  * Return: number of characters printed
  */
-static int handle_specifier(char fmt, va_list ap)
+static int handle_format(char fmt, va_list args)
 {
 	if (fmt == 'c')
-		return (put_char((char)va_arg(ap, int)));
+		return write_char((char)va_arg(args, int));
 	if (fmt == 's')
-		return (put_str(va_arg(ap, char *)));
+		return write_str(va_arg(args, char *));
 	if (fmt == '%')
-		return (put_char('%'));
+		return write_char('%');
 
-	/* Unknown specifier: print the requested lines */
-	_putstr("Correct output - case: _printf(\"%");
-	put_char(fmt);
-	_putstr("\\n\");\n");
-
-	/* Also print % + unknown char */
-	put_char('%');
-	put_char(fmt);
-	put_char('\n');
-	return 4; /* عدد الأحرف المطبوعة: % + char + \n + أي إضافات */
+	/* unknown specifier: print '%' then the char */
+	write_char('%');
+	return 1 + write_char(fmt);
 }
 
 /**
  * _printf - simplified printf function
  * @format: format string
  *
- * Return: total number of characters printed, or -1 if error
+ * Return: number of characters printed, or -1 on error
  */
 int _printf(const char *format, ...)
 {
-	va_list ap;
-	int total = 0, i = 0;
+	va_list args;
+	int total = 0;
+	int i = 0;
 
 	if (!format)
 		return -1;
 
-	va_start(ap, format);
+	va_start(args, format);
 	while (format[i])
 	{
 		if (format[i] == '%')
@@ -86,16 +80,16 @@ int _printf(const char *format, ...)
 			i++;
 			if (!format[i])
 			{
-				va_end(ap);
+				va_end(args);
 				return -1;
 			}
-			total += handle_specifier(format[i], ap);
+			total += handle_format(format[i], args);
 		}
 		else
-			total += put_char(format[i]);
+			total += write_char(format[i]);
 		i++;
 	}
-	va_end(ap);
+	va_end(args);
 	return total;
 }
 
